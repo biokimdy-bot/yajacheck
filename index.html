@@ -15,7 +15,14 @@
         .controls input[type="date"] { width: 120px; }
 
         .status-msg { font-size: 12px; color: #f1c40f; font-weight: bold; margin-left: auto; }
-        .save-btn { background: #27ae60; color: white; padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: auto; }
+        /* 저장 버튼: 크기를 조금 줄였습니다 */
+        .save-btn { background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: auto; font-size: 13px; }
+        
+        /* 기록 버튼: 보조적인 느낌의 남색으로 설정했습니다 */
+        .record-btn { background: #34495e; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 5px; font-size: 13px; }
+        
+        /* 모바일에서 버튼이 너무 붙지 않게 조정 */
+        .btn-group { display: flex; align-items: center; margin-left: auto; }
 
         .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; }
         .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -66,7 +73,11 @@
         </select>
     </div>
     <div id="loading" class="status-msg">로딩 중...</div>
-    <button class="save-btn" onclick="sendData()">결석 저장하기</button>
+    
+    <div class="btn-group">
+        <button class="save-btn" onclick="sendData()">저장</button>
+        <button class="record-btn" onclick="window.open('https://docs.google.com/spreadsheets/d/1qozol8SU93DL88U4Wni7bn2Mzlb7cOxNb-WmRBIh5-0/edit?usp=sharing', '_blank')">기록</button>
+    </div>
 </div>
 
 <div class="content">
