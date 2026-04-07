@@ -116,7 +116,10 @@
         }
     };
 
-    document.getElementById('datePicker').valueAsDate = new Date();
+        const today = new Date();
+    const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    document.getElementById('datePicker').value = localDate;
+
 
     async function loadSheetData() {
         document.getElementById('loading').innerText = "🔄 동기화 중...";
