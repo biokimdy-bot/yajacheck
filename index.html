@@ -79,7 +79,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMkHqWlrjP7ll5bF5QfDtwsf4HuUCM5oZaW9O3JB1ykjFj0PlUT-jNwjo-SAx1HNs/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxZDnIQYqEIyj65yW4oOYKqfQUVZKHo3kmPBOSowQZWXwZIqKWqRkX7Kjp3uyaTuE/exec"; 
     let fullData = {}; 
     let currentPlace = '빛무리터';
     let selectedStore = {}; 
@@ -132,9 +132,8 @@ function render() {
         const dayName = ['일','월','화','수','목','금','토'][new Date(dateVal).getDay()];
         const sessionIdx = parseInt(document.getElementById('sessionPicker').value);
         
-        // 수요일 체크
-        if (dayName === '수') {
-            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">수요일은 정규 야자가 없습니다.</div>`;
+        if (dayName === '수' || dayName === '일' || dayName === '토') {
+            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">해당 요일은 정규 야자가 없습니다.</div>`;
             return; 
         }
 
@@ -144,48 +143,30 @@ function render() {
             const pos = coords[currentPlace][s.id];
             if(!pos) return; 
 
-            // 시트에서 가져온 해당 요일의 스케줄 배열 (예: ["1", "0", "1"])
-            const sch = s.sch[dayName] || [];
+            // 위 code.gs에서 만든 [8교시, 야자1, 야자2] 배열을 가져옴
+            const daySch = s.sch[dayName] || [];
+            const val = String(daySch[sessionIdx] || "").trim();
             
-            // 💡 [교시 밀림 해결] 
-            // 8교시(0)를 선택했을 때 시트의 첫 번째 값을 가져오도록 인덱스를 명확히 지정합니다.
-            // 만약 그래도 한 칸씩 밀린다면 아래 sessionIdx 부분을 수정해야 합니다.
-            const val = String(sch[sessionIdx - 1] || "").trim();
-            
-            // 판별 로직: 빈칸, 0, False, X 가 아니면 무조건 "출석(활성)"
-            const isAttending = val !== "" && val !== "0" && val.toUpperCase() !== "FALSE" && val.toUpperCase() !== "X";
+            // 💡 판별: 셀에 내용이 있으면(8교시, 야자 1 등) 활성화, 비어있으면 비활성화
+            const isAttending = val !== "";
             
             const card = document.createElement('div');
-            card.className = `seat ${pos.wide ? 'wide' : ''}`;
-            
-            if (!isAttending) {
-                card.classList.add('disabled');
-            }
-
+            card.className = `seat ${pos.wide ? 'wide' : ''} ${!isAttending ? 'disabled' : ''}`;
             card.style.left = pos.x + 'px';
             card.style.top = pos.y + 'px';
             
             const storeKey = `${currentPlace}_${s.id}`;
-            if(selectedStore[storeKey]) {
-                card.classList.add('selected');
-            }
+            if(selectedStore[storeKey]) card.classList.add('selected');
 
-            card.innerHTML = `
-                <div class="seat-header">#${s.id}</div>
-                <div class="seat-name">${s.name}</div>
-            `;
+            card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">${s.name}</div>`;
             
             if(isAttending) {
                 card.onclick = () => {
                     card.classList.toggle('selected');
-                    if(card.classList.contains('selected')) {
-                        selectedStore[storeKey] = true;
-                    } else {
-                        delete selectedStore[storeKey];
-                    }
+                    if(card.classList.contains('selected')) selectedStore[storeKey] = true;
+                    else delete selectedStore[storeKey];
                 };
             }
-            
             map.appendChild(card);
         });
     }
