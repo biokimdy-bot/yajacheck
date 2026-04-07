@@ -3,68 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 야자 배치도형 출석체크</title>
+    <title>2026 야자 통합 출석체크</title>
     <style>
         :root { --main: #2c3e50; --absent: #e74c3c; --dim: #ecf0f1; --border: #bdc3c7; }
-        body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; background: #dfe6e9; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
         
-        .sidebar { width: 200px; background: var(--main); color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .sidebar input, .sidebar button { padding: 10px; border-radius: 5px; border: none; }
-        .save-btn { background: #27ae60; color: white; cursor: pointer; font-weight: bold; margin-top: auto; }
+        /* 사이드바 */
+        .sidebar { width: 180px; background: var(--main); color: white; padding: 15px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+        .sidebar input { padding: 8px; border-radius: 4px; border: none; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
+        .save-btn { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; }
         
+        /* 메인 영역 */
         .content { flex: 1; display: flex; flex-direction: column; padding: 10px; position: relative; overflow: auto; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
-        .tab { padding: 8px 15px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab { padding: 10px 20px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: #3498db; color: white; }
 
-        /* 도면 레이아웃 핵심 */
+        /* 지도 캔버스 */
         .map-canvas { 
             position: relative; 
-            width: 950px; /* 도면 가로 크기 고정 */
-            height: 600px; 
+            width: 1000px; 
+            height: 650px; 
             background: white; 
-            border-radius: 10px; 
-            border: 2px solid #b2bec3;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            margin: auto;
+            border: 2px solid #b2bec3; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* 좌석 공통 스타일 */
+        /* 좌석 스타일 */
         .seat { 
             position: absolute; 
-            width: 85px; 
-            height: 75px; 
-            background: #fff; 
-            border: 1px solid var(--border); 
-            border-radius: 5px; 
-            font-size: 11px; 
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 4px;
-            box-sizing: border-box;
+            width: 75px; height: 65px; 
+            background: #fff; border: 1px solid var(--border); 
+            border-radius: 4px; display: flex; flex-direction: column; 
+            justify-content: space-around; padding: 3px; box-sizing: border-box; 
         }
         .seat.expulsion { border: 2px solid var(--absent); background: #fff5f5; }
-        .seat-num { font-weight: bold; color: #636e72; }
-        .seat-name { font-weight: bold; font-size: 12px; overflow: hidden; white-space: nowrap; }
+        .seat-header { display: flex; justify-content: space-between; font-size: 10px; color: #7f8c8d; }
+        .seat-name { font-weight: bold; font-size: 12px; text-align: center; }
         
         .btns { display: flex; justify-content: center; gap: 2px; }
-        .b { width: 24px; height: 24px; border: 1px solid #ccc; background: #fff; cursor: pointer; border-radius: 3px; font-size: 9px; }
-        .b.selected { background: var(--absent); color: white; }
+        .b { width: 22px; height: 22px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 9px; }
+        .b.selected { background: var(--absent); color: white; border-color: var(--absent); }
         .b:disabled { background: var(--dim); color: #ccc; border: none; }
 
-        /* 지형물 표시 */
-        .facility { position: absolute; background: #ecf0f1; border: 1px dashed #b2bec3; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #7f8c8d; }
+        /* 문/창문 표시 */
+        .facility { position: absolute; background: #dfe6e9; border: 1px dashed #b2bec3; font-size: 11px; display: flex; align-items: center; justify-content: center; color: #636e72; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h4>야자 출석체크</h4>
+    <h3 style="margin:0 0 10px 0">출석 관리</h3>
+    <label>날짜</label>
     <input type="date" id="datePicker">
-    <input type="text" id="teacher" placeholder="선생님 성함">
-    <div id="loading" style="font-size: 11px;">데이터 로딩 중...</div>
+    <label>작성자</label>
+    <input type="text" id="teacher" placeholder="성함 입력">
+    <div id="loading" style="font-size:11px; color:#bdc3c7">데이터 동기화 대기...</div>
     <button class="save-btn" onclick="sendToSheet()">데이터 저장</button>
 </div>
 
@@ -77,88 +72,120 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "선생님의_GAS_URL"; // 여기에 꼭 URL을 넣으세요!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoupBVTsnM65BQ3KOISxA9Qsrmk0-KXg4dB6varvPvZlNTVcdhOccS6HKyO7uhbt5O/exec"; 
 
     const db = {
         bitmuri: [
-            // 번호별 좌표 (x, y) 설정
+            // 상단 벽면 (21-24)
             {id: 21, name: "정다윤", x: 50, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 22, name: "안건영", x: 145, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
-            {id: 23, name: "차유현", x: 240, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 24, name: "박정빈", x: 335, y: 30, sch: {mon:[1,1,0], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
-            
+            {id: 22, name: "안건영", x: 135, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
+            {id: 23, name: "차유현", x: 220, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 24, name: "박정빈", x: 305, y: 30, sch: {mon:[1,1,0], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
+            // 중앙 메인 테이블 (1-6, 9-14)
             {id: 1, name: "곽세아", x: 50, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 2, name: "권나윤", x: 145, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 3, name: "김나현", x: 240, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 4, name: "김민서", x: 335, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 5, name: "박소윤", x: 430, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 6, name: "박지효", x: 525, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            
-            {id: 9, name: "양고은", x: 50, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 10, name: "이세영", x: 145, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 11, name: "이지인", x: 240, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 12, name: "임수현", x: 335, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 13, name: "정은채", x: 430, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 14, name: "조윤서", x: 525, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-
-            {id: 7, name: "성나경", x: 50, y: 350, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 8, name: "심하윤", x: 145, y: 350, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 15, name: "조하람", x: 50, y: 435, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 16, name: "최나윤", x: 145, y: 435, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-
-            {id: 17, name: "최윤서", x: 400, y: 500, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 18, name: "한서현", x: 495, y: 500, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 19, name: "홍서연", x: 590, y: 500, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 20, name: "황지우", x: 685, y: 500, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}}
+            {id: 2, name: "권나윤", x: 135, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 3, name: "김나현", x: 220, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 4, name: "김민서", x: 305, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 5, name: "박소윤", x: 390, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 6, name: "박지효", x: 475, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 9, name: "양고은", x: 50, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 10, name: "이세영", x: 135, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 11, name: "이지인", x: 220, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 12, name: "임수현", x: 305, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 13, name: "정은채", x: 390, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 14, name: "조윤서", x: 475, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            // 중간 작은 테이블 (7-8, 15-16)
+            {id: 7, name: "성나경", x: 600, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 8, name: "심하윤", x: 685, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 15, name: "조하람", x: 600, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 16, name: "최나윤", x: 685, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            // 하단 입구 (17-20)
+            {id: 17, name: "최윤서", x: 400, y: 450, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 18, name: "한서현", x: 485, y: 450, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 19, name: "홍서연", x: 570, y: 450, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 20, name: "황지우", x: 655, y: 450, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}}
         ],
         cafe: [
-            {id: 30, name: "임세민", x: 300, y: 30, sch: {mon:[1,1,1], tue:[1,0,0], wed:[1,0,0], thu:[1,0,0], fri:[1,1,1]}},
-            {id: 31, name: "유지인", x: 395, y: 30, sch: {mon:[1,0,0], tue:[1,0,0], wed:[1,0,0], thu:[1,0,0], fri:[0,0,0]}},
-            {id: 32, name: "공석", x: 550, y: 30, sch: {mon:[0,0,0], tue:[0,0,0], wed:[0,0,0], thu:[0,0,0], fri:[0,0,0]}},
-            {id: 33, name: "최시원", x: 645, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            
+            // 창가/유리문쪽 (30-33)
+            {id: 30, name: "임세민", x: 400, y: 30, sch: {mon:[1,1,1], tue:[1,0,0], wed:[1,0,0], thu:[1,0,0], fri:[1,1,1]}},
+            {id: 31, name: "유지인", x: 485, y: 30, sch: {mon:[1,0,0], tue:[1,0,0], wed:[1,0,0], thu:[1,0,0], fri:[0,0,0]}},
+            {id: 32, name: "(공석)", x: 600, y: 30, sch: {mon:[0,0,0], tue:[0,0,0], wed:[0,0,0], thu:[0,0,0], fri:[0,0,0]}},
+            {id: 33, name: "최시원", x: 685, y: 30, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            // 좌측 벽면 (25-29)
             {id: 25, name: "김효주", x: 30, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 26, name: "송지민", x: 30, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 27, name: "오가현", x: 30, y: 320, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 28, name: "이다은", x: 30, y: 405, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 29, name: "이서우", x: 30, y: 490, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-
-            // 중앙 대형 테이블 (예시 배치)
-            {id: 34, name: "신주은", x: 200, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
-            {id: 35, name: "박소연", x: 295, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 36, name: "송세희", x: 200, y: 235, sch: {mon:[1,0,0], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 37, name: "정서희", x: 295, y: 235, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 45, name: "박승주", x: 500, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
-            {id: 46, name: "오하람", x: 595, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}}
-            // (이런식으로 모든 번호의 x, y 좌표를 도면에 맞춰 지정 가능합니다)
+            {id: 26, name: "송지민", x: 30, y: 225, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 27, name: "오가현", x: 30, y: 300, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 28, name: "이다은", x: 30, y: 375, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 29, name: "이서우", x: 30, y: 450, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            // 중앙 대형 테이블 1열 (34-44)
+            {id: 34, name: "신주은", x: 150, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,0]}},
+            {id: 35, name: "박소연", x: 235, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 36, name: "송세희", x: 150, y: 215, sch: {mon:[1,0,0], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 37, name: "정서희", x: 235, y: 215, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 38, name: "권담윤", x: 150, y: 280, sch: {mon:[1,1,1], tue:[1,1,0], wed:[1,1,0], thu:[1,1,0], fri:[1,1,1]}},
+            {id: 39, name: "허윤지", x: 235, y: 280, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 40, name: "신은우", x: 150, y: 345, sch: {mon:[1,1,0], tue:[1,1,0], wed:[1,1,0], thu:[1,1,0], fri:[1,1,1]}},
+            {id: 41, name: "김지민", x: 235, y: 345, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 42, name: "전소윤", x: 150, y: 410, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 43, name: "박서연", x: 235, y: 410, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 44, name: "강은혜", x: 150, y: 475, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            // 중앙 대형 테이블 2열 (45-56)
+            {id: 45, name: "박승주", x: 380, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 46, name: "오하람", x: 465, y: 150, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 47, name: "박채윤", x: 380, y: 215, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 48, name: "장채원", x: 465, y: 215, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 49, name: "신소영", x: 380, y: 280, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 50, name: "최은정", x: 465, y: 280, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 51, name: "이지호", x: 380, y: 345, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 52, name: "홍지민", x: 465, y: 345, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 53, name: "이채민", x: 380, y: 410, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 54, name: "강보경", x: 465, y: 410, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 55, name: "정채연", x: 380, y: 475, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}},
+            {id: 56, name: "박세은", x: 465, y: 475, sch: {mon:[1,1,1], tue:[1,1,1], wed:[1,1,1], thu:[1,1,1], fri:[1,1,1]}}
         ]
     };
 
     let currentPlace = 'bitmuri';
-    let summaryData = {};
+    let summaryData = {}; 
 
     document.getElementById('datePicker').valueAsDate = new Date();
+
+    async function fetchSummary() {
+        try {
+            const res = await fetch(SCRIPT_URL);
+            summaryData = await res.json();
+            document.getElementById('loading').innerText = "동기화 완료";
+            render();
+        } catch(e) { document.getElementById('loading').innerText = "오프라인 모드"; render(); }
+    }
 
     function render() {
         const map = document.getElementById('map');
         map.innerHTML = '';
+        const dateVal = document.getElementById('datePicker').value;
         const dayMap = ['sun','mon','tue','wed','thu','fri','sat'];
-        const day = dayMap[new Date(document.getElementById('datePicker').value).getDay()];
+        const day = dayMap[new Date(dateVal).getDay()];
 
-        // 도면 부가 요소 (문 등)
+        // 보조 시설물 배치
         if(currentPlace === 'bitmuri') {
-            map.innerHTML += '<div class="facility" style="left:400px; bottom:0; width:100px; height:30px;">출입문</div>';
+            map.innerHTML += '<div class="facility" style="left:380px; top:550px; width:120px; height:40px;">출입문 1</div>';
+            map.innerHTML += '<div class="facility" style="left:650px; top:550px; width:120px; height:40px;">출입문 2</div>';
+        } else {
+            map.innerHTML += '<div class="facility" style="left:30px; top:30px; width:150px; height:40px;">유리문 출입구</div>';
+            map.innerHTML += '<div class="facility" style="left:300px; top:0; width:500px; height:20px;">창문 구역</div>';
         }
 
         db[currentPlace].forEach(s => {
             const daySch = s.sch[day] || [0,0,0];
             const count = summaryData[s.name] || 0;
-            const card = document.createElement('div');
-            card.className = `seat ${count >= 5 ? 'expulsion' : ''}`;
-            card.style.left = s.x + 'px';
-            card.style.top = s.y + 'px';
-            card.innerHTML = `
-                <div class="seat-num">${s.id}</div>
+            const isExpulsion = count >= 5;
+
+            const div = document.createElement('div');
+            div.className = `seat ${isExpulsion ? 'expulsion' : ''}`;
+            div.style.left = s.x + 'px';
+            div.style.top = s.y + 'px';
+            div.innerHTML = `
+                <div class="seat-header"><span>#${s.id}</span> <span style="color:red">${count > 0 ? count : ''}</span></div>
                 <div class="seat-name">${s.name}</div>
                 <div class="btns">
                     <button class="b" ${daySch[0]?'':'disabled'} onclick="this.classList.toggle('selected')">8</button>
@@ -166,23 +193,53 @@
                     <button class="b" ${daySch[2]?'':'disabled'} onclick="this.classList.toggle('selected')">2</button>
                 </div>
             `;
-            card.dataset.id = s.id;
-            card.dataset.name = s.name;
-            map.appendChild(card);
+            div.dataset.name = s.name;
+            div.dataset.id = s.id;
+            map.appendChild(div);
         });
     }
 
     function setPlace(p) {
         currentPlace = p;
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        document.querySelectorAll('.tab').forEach((t, i) => {
+            t.classList.toggle('active', (i === 0 && p === 'bitmuri') || (i === 1 && p === 'cafe'));
+        });
         render();
     }
 
-    // 초기 실행
-    document.getElementById('datePicker').onchange = render;
-    render();
-</script>
+    async function sendToSheet() {
+        const teacher = document.getElementById('teacher').value;
+        if(!teacher) return alert("선생님 성함을 입력하세요.");
+        
+        const payload = {
+            date: document.getElementById('datePicker').value,
+            dayOfWeek: new Date(document.getElementById('datePicker').value).toLocaleDateString('ko-KR', {weekday:'long'}),
+            author: teacher,
+            absents: []
+        };
 
+        document.querySelectorAll('.seat').forEach(seat => {
+            seat.querySelectorAll('.b.selected').forEach(btn => {
+                payload.absents.push({
+                    place: currentPlace === 'bitmuri' ? '빛무리터' : '학습카페',
+                    seatId: seat.dataset.id,
+                    name: seat.dataset.name,
+                    session: btn.innerText
+                });
+            });
+        });
+
+        if(payload.absents.length === 0) return alert("체크된 결석자가 없습니다.");
+
+        if(confirm(`총 ${payload.absents.length}건의 결석 데이터를 전송할까요?`)) {
+            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.result === 'success') { alert("저장되었습니다."); location.reload(); }
+        }
+    }
+
+    document.getElementById('datePicker').onchange = render;
+    fetchSummary();
+</script>
 </body>
 </html>
