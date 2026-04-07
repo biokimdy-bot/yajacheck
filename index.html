@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -79,11 +80,10 @@
 </div>
 
 <script>
-    // ⚠️ 구글 앱스 스크립트 주소 꼭 넣으세요!
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzASrlrWLGfExtAuPLNbW0cRQgjkq3rksJ6mKOjstBFWZ5LP8dI5jXZzPz4pWZSyaE/exec"; 
     let fullData = {}; 
     let currentPlace = '빛무리터';
-    let selectedStore = {}; // 탭 이동 시 결석 상태 유지
+    let selectedStore = {}; 
 
     const coords = {
         "빛무리터": {
@@ -115,7 +115,7 @@
 
     async function loadSheetData() {
         document.getElementById('loading').innerText = "🔄 동기화 중...";
-        selectedStore = {}; // 날짜가 바뀌면 선택 초기화
+        selectedStore = {}; 
         try {
             const res = await fetch(SCRIPT_URL);
             fullData = await res.json();
@@ -142,12 +142,15 @@
             if(!pos) return; 
 
             const sch = s.sch[dayName] || [0, 0, 0];
-            const isAttending = sch[sessionIdx] === 1; // 선택한 교시에 참석하는지 여부
+            const val = sch[sessionIdx];
+            
+            // 💡 핵심 수정: 구글 시트에서 숫자 1, 문자 "1", "O", "TRUE" 등 어떤 참값이 오든 활성화
+            // 단, 값이 없거나 0, "0", "FALSE", "X"일 경우에만 불참(비활성화) 처리
+            const isAttending = val && val != 0 && val != "0" && String(val).toUpperCase() !== "FALSE" && String(val).toUpperCase() !== "X";
             
             const card = document.createElement('div');
             card.className = `seat ${pos.wide ? 'wide' : ''}`;
             
-            // 참석 안하는 학생이면 비활성화 처리
             if (!isAttending) {
                 card.classList.add('disabled');
             }
@@ -156,7 +159,6 @@
             card.style.top = pos.y + 'px';
             
             const storeKey = `${currentPlace}_${s.id}`;
-            // 저장된 결석 상태 복원
             if(selectedStore[storeKey]) {
                 card.classList.add('selected');
             }
@@ -166,7 +168,6 @@
                 <div class="seat-name">${s.name}</div>
             `;
             
-            // 참석하는 학생만 클릭 이벤트 활성화
             if(isAttending) {
                 card.onclick = () => {
                     card.classList.toggle('selected');
@@ -189,10 +190,9 @@
         render();
     }
 
-    // 날짜가 바뀌거나 교시가 바뀌면 데이터를 새로 렌더링하고 선택 상태 초기화
     document.getElementById('datePicker').onchange = loadSheetData;
     document.getElementById('sessionPicker').onchange = () => {
-        selectedStore = {}; // 교시가 바뀌면 결석 체크 초기화
+        selectedStore = {}; 
         render();
     };
 
@@ -204,7 +204,6 @@
         const sessionSelect = document.getElementById('sessionPicker');
         const sessionText = sessionSelect.options[sessionSelect.selectedIndex].text;
         
-        // 서버에 보낼 교시 값 매핑 (0->8, 1->1, 2->2)
         const sessionMap = { "0": "8", "1": "1", "2": "2" };
         const sessionVal = sessionMap[sessionSelect.value];
         
@@ -223,7 +222,6 @@
             const res = await response.json();
             if(res.result === 'success') { 
                 alert(`${sessionText} 결석 저장이 완료되었습니다!`); 
-                // 저장 후 선택 초기화
                 selectedStore = {};
                 render();
                 document.getElementById('loading').innerText = "✅ 전송 완료";
