@@ -128,12 +128,11 @@ function render() {
         const map = document.getElementById('map');
         map.innerHTML = '';
         
-        // 날짜 객체 생성 및 요일 추출
         const dateVal = document.getElementById('datePicker').value;
         const dayName = ['일','월','화','수','목','금','토'][new Date(dateVal).getDay()];
         const sessionIdx = parseInt(document.getElementById('sessionPicker').value);
         
-        // 수요일 예외 처리 (원치 않으시면 이 if문 전체를 삭제해도 됩니다)
+        // 수요일 체크 (오늘이 수요일이면 강제로 멈춤 - 필요 없으면 이 if문 삭제 가능)
         if (dayName === '수') {
             map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">수요일은 정규 야자가 없습니다.</div>`;
             return; 
@@ -148,13 +147,11 @@ function render() {
             // 시트에서 가져온 해당 요일의 스케줄 배열
             const sch = s.sch[dayName] || [];
             
-            // 💡 수정된 부분: 시트 데이터 구조가 [8교시, 야자1, 야자2] 순서라면
-            // sessionIdx(0, 1, 2)를 그대로 가져오면 됩니다.
-            // 만약 그래도 밀린다면 아래 숫자를 +1 혹은 -1 하며 조정할 수 있습니다.
-            const val = sch[sessionIdx]; 
+            // 선택된 교시의 값 (8교시=0, 야자1=1, 야자2=2)
+            const val = String(sch[sessionIdx] || "").trim();
             
-            // 데이터가 '1'이거나 'true'이거나 'O'인 경우만 활성화
-            const isAttending = val && (val == "1" || String(val).toUpperCase() === "TRUE" || String(val).toUpperCase() === "O");
+            // 💡 판별 로직 완화: "0", "FALSE", "X", 공백이 아니면 모두 출석(활성)으로 간주
+            const isAttending = val !== "" && val !== "0" && val.toUpperCase() !== "FALSE" && val.toUpperCase() !== "X";
             
             const card = document.createElement('div');
             card.className = `seat ${pos.wide ? 'wide' : ''}`;
@@ -176,6 +173,7 @@ function render() {
                 <div class="seat-name">${s.name}</div>
             `;
             
+            // 활성화된 좌석만 클릭 가능
             if(isAttending) {
                 card.onclick = () => {
                     card.classList.toggle('selected');
@@ -190,7 +188,6 @@ function render() {
             map.appendChild(card);
         });
     }
-
     function setPlace(p) {
         currentPlace = p;
         document.getElementById('tab-bitmuri').classList.toggle('active', p === '빛무리터');
