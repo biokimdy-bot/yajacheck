@@ -6,39 +6,60 @@
     <title>2026 야자 스마트 출석체크</title>
     <style>
         :root { --main: #2c3e50; --absent: #e74c3c; --dim: #ecf0f1; --border: #bdc3c7; }
-        body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
-        .sidebar { width: 180px; background: var(--main); color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; z-index: 10; }
-        .sidebar input { padding: 10px; border-radius: 4px; border: none; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
-        .save-btn { background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; font-size: 14px; }
-        .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
-        .tab { padding: 10px 25px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
-        .tab.active { background: #3498db; color: white; }
-        .map-canvas { position: relative; width: 1050px; height: 650px; background: white; border: 2px solid #b2bec3; border-radius: 8px; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f1f2f6; overflow: hidden; }
         
+        /* 상단 컨트롤 바 (새로 추가) */
+        .controls { background: var(--main); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 15px; font-size: 13px; z-index: 10; border-bottom: 2px solid #34495e; }
+        .controls h3 { margin: 0; font-size: 16px; margin-right: 10px; }
+        .controls .input-group { display: flex; align-items: center; gap: 5px; }
+        .controls input { padding: 8px; border-radius: 4px; border: none; font-size: 13px; box-sizing: border-box; }
+        .controls input[type="date"] { width: 130px; }
+        .controls input[type="text"] { width: 120px; }
+        .controls .status-msg { font-size: 12px; color: #f1c40f; font-weight: bold; margin-left: auto; }
+        .save-btn { background: #27ae60; color: white; padding: 8px 18px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-left: 10px; }
+        
+        /* 메인 콘텐츠 영역 */
+        .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; position: relative; }
+        
+        /* 탭 버튼 */
+        .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab { padding: 8px 20px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; font-size: 13px; }
+        .tab.active { background: #3498db; color: white; }
+
+        /* 캔버스 (배치도) */
+        .map-canvas { position: relative; width: 1000px; height: 580px; background: white; border: 2px solid #b2bec3; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
         /* 일반 좌석 */
         .seat { position: absolute; width: 75px; height: 65px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-around; padding: 3px; box-sizing: border-box; }
         /* 넓은 좌석 (상단용) */
-        .seat.wide { width: 110px; height: 70px; background: #f8f9fa; border: 2px solid #34495e; }
+        .seat.wide { width: 100px; height: 70px; background: #f8f9fa; border: 2px solid #34495e; }
         
         .seat-header { display: flex; justify-content: space-between; font-size: 10px; color: #7f8c8d; }
-        .seat-name { font-weight: bold; font-size: 12px; text-align: center; }
+        .seat-name { font-weight: bold; font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* 결석 체크 버튼 */
         .btns { display: flex; justify-content: center; gap: 2px; }
-        .b { width: 24px; height: 24px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 10px; font-weight: bold; }
+        .b { width: 22px; height: 22px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 9px; font-weight: bold; }
         .b.selected { background: var(--absent); color: white; border-color: var(--absent); }
         .b:disabled { background: var(--dim); color: #ccc; border: none; cursor: not-allowed; }
-        .wed-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #7f8c8d; font-size: 18px; font-weight: bold; }
+
+        /* 수요일 안내 메시지 */
+        .wed-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #7f8c8d; font-size: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="sidebar">
-    <h3 style="margin:0">야자 출석체크</h3>
-    <label>날짜 선택</label>
-    <input type="date" id="datePicker">
-    <label>선생님 성함</label>
-    <input type="text" id="teacher" placeholder="기록자 입력">
-    <div id="loading" style="font-size:12px; color:#f1c40f;">데이터 로딩 중...</div>
+<div class="controls">
+    <h3>야자 출석체크</h3>
+    <div class="input-group">
+        <label>날짜:</label>
+        <input type="date" id="datePicker">
+    </div>
+    <div class="input-group">
+        <label>선생님:</label>
+        <input type="text" id="teacher" placeholder="이름 입력">
+    </div>
+    <div id="loading" class="status-msg">데이터 로딩 중...</div>
     <button class="save-btn" onclick="sendData()">결석 저장하기</button>
 </div>
 
@@ -57,31 +78,29 @@
     let fullData = {}; 
     let currentPlace = '빛무리터';
     
+    // 🛠️ 콤팩트해진 도면 좌표 설정 (흰색 바탕 안에 쏙 들어오게 수정)
     const coords = {
         "빛무리터": {
-            // 상단 넓은 좌석 (21-24)
-            21: {x:50, y:20, wide:true}, 22: {x:180, y:20, wide:true}, 23: {x:310, y:20, wide:true}, 24: {x:440, y:20, wide:true},
-            // 중앙 좌석
-            1: {x:50, y:150}, 2: {x:135, y:150}, 3: {x:220, y:150}, 4: {x:305, y:150}, 5: {x:390, y:150}, 6: {x:475, y:150},
-            9: {x:50, y:225}, 10: {x:135, y:225}, 11: {x:220, y:225}, 12: {x:305, y:225}, 13: {x:390, y:225}, 14: {x:475, y:225},
-            // 사이드
-            7: {x:600, y:150}, 8: {x:685, y:150}, 15: {x:600, y:225}, 16: {x:685, y:225},
-            // 하단
-            17: {x:400, y:450}, 18: {x:485, y:450}, 19: {x:570, y:450}, 20: {x:655, y:450}
+            // 상단 넓은 좌석 (21-24) - 간격 축소
+            21: {x:30, y:20, wide:true}, 22: {x:140, y:20, wide:true}, 23: {x:250, y:20, wide:true}, 24: {x:360, y:20, wide:true},
+            // 중앙 좌석 - 더 조밀하게
+            1: {x:30, y:120}, 2: {x:105, y:120}, 3: {x:180, y:120}, 4: {x:255, y:120}, 5: {x:330, y:120}, 6: {x:405, y:120},
+            9: {x:30, y:185}, 10: {x:105, y:185}, 11: {x:180, y:185}, 12: {x:255, y:185}, 13: {x:330, y:185}, 14: {x:405, y:185},
+            // 사이드 - 안쪽으로 당김
+            7: {x:500, y:120}, 8: {x:575, y:120}, 15: {x:500, y:185}, 16: {x:575, y:185},
+            // 하단 - 더 위로 올림
+            17: {x:330, y:350}, 18: {x:405, y:350}, 19: {x:480, y:350}, 20: {x:555, y:350}
         },
         "학습카페": {
-            // 창가 넓은 좌석 (30-33)
-            30: {x:400, y:20, wide:true}, 31: {x:530, y:20, wide:true}, 32: {x:660, y:20, wide:true}, 33: {x:790, y:20, wide:true},
-            // 오른쪽 벽면 (25-29) - 위치 수정됨
-            25: {x:930, y:150}, 26: {x:930, y:230}, 27: {x:930, y:310}, 28: {x:930, y:390}, 29: {x:930, y:470},
-            // 중앙1열
-            34: {x:200, y:150}, 36: {x:200, y:220}, 37: {x:200, y:290}, 39: {x:200, y:360}, 41: {x:200, y:430}, 43: {x:200, y:500}, 45: {x:200, y:570},
-            // 중앙2열
-            35: {x:280, y:150}, 38: {x:280, y:220}, 40: {x:280, y:290}, 42: {x:280, y:360}, 44: {x:280, y:430},
-            // 중앙3열
-            46: {x:450, y:150}, 48: {x:450, y:220}, 50: {x:450, y:290}, 52: {x:450, y:360}, 54: {x:450, y:430}, 56: {x:450, y:500},
-            // 중앙4열
-            47: {x:530, y:150}, 49: {x:530, y:220}, 51: {x:530, y:290}, 53: {x:530, y:360}, 55: {x:530, y:430}
+            // 창가 넓은 좌석 (30-33) - 안쪽으로 당김
+            30: {x:350, y:20, wide:true}, 31: {x:460, y:20, wide:true}, 32: {x:570, y:20, wide:true}, 33: {x:680, y:20, wide:true},
+            // 오른쪽 벽면 (25-29) - 화면 안쪽으로 확실히 당김
+            25: {x:800, y:120}, 26: {x:800, y:180}, 27: {x:800, y:240}, 28: {x:800, y:300}, 29: {x:800, y:360},
+            // 중앙 대칭 콤팩트 배치 (간격 줄임)
+            34: {x:150, y:120}, 36: {x:150, y:180}, 37: {x:150, y:240}, 39: {x:150, y:300}, 41: {x:150, y:360}, 43: {x:150, y:420}, 45: {x:150, y:480},
+            35: {x:220, y:120}, 38: {x:220, y:180}, 40: {x:220, y:240}, 42: {x:220, y:300}, 44: {x:220, y:360},
+            46: {x:400, y:120}, 48: {x:400, y:180}, 50: {x:400, y:240}, 52: {x:400, y:300}, 54: {x:400, y:360}, 56: {x:400, y:420},
+            47: {x:470, y:120}, 49: {x:470, y:180}, 51: {x:470, y:240}, 53: {x:470, y:300}, 55: {x:470, y:360}
         }
     };
 
@@ -118,7 +137,7 @@
             const sch = s.sch[dayName] || [0, 0, 0];
 
             const card = document.createElement('div');
-            card.className = `seat ${pos.wide ? 'wide' : ''}`; // 넓은 좌석 클래스 적용
+            card.className = `seat ${pos.wide ? 'wide' : ''}`;
             card.style.left = pos.x + 'px';
             card.style.top = pos.y + 'px';
             card.innerHTML = `
@@ -152,7 +171,7 @@
 
     async function sendData() {
         const teacher = document.getElementById('teacher').value;
-        if(!teacher) return alert("성함을 입력하세요.");
+        if(!teacher) return alert("선생님 성함을 입력하세요.");
         const date = document.getElementById('datePicker').value;
         const absents = [];
         document.querySelectorAll('.seat').forEach(seat => {
