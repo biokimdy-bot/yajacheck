@@ -7,13 +7,13 @@
     <style>
         :root { --main: #2c3e50; --absent: #e74c3c; --dim: #bdc3c7; --border: #95a5a6; }
         body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f1f2f6; overflow: hidden; }
-        
+
         .controls { background: var(--main); color: white; padding: 10px 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; z-index: 10; }
         .controls h3 { margin: 0; font-size: 16px; margin-right: 5px; }
         .controls .input-group { display: flex; align-items: center; gap: 5px; }
         .controls input, .controls select { padding: 7px; border-radius: 4px; border: none; font-size: 13px; font-family: inherit; }
         .controls input[type="date"] { width: 120px; }
-        
+
         .status-msg { font-size: 12px; color: #f1c40f; font-weight: bold; margin-left: auto; }
         .save-btn { background: #27ae60; color: white; padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: auto; }
 
@@ -22,20 +22,19 @@
         .tab { padding: 8px 20px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: #3498db; color: white; }
 
-        .map-canvas { position: relative; width: 1000px; height: 600px; background: white; border: 2px solid #b2bec3; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        /* 💡 2번 요청: 하얀색 바탕 너비를 1000px에서 750px로 줄였습니다. */
+        .map-canvas { position: relative; width: 750px; height: 600px; background: white; border: 2px solid #b2bec3; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
         .seat { position: absolute; width: 72px; height: 62px; background: #fff; border: 2px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; box-sizing: border-box; }
         .seat.wide { width: 95px; height: 68px; }
-        
+
         .seat-header { font-size: 10px; color: #7f8c8d; margin-bottom: 2px; }
         .seat-name { font-weight: bold; font-size: 14px; color: #2c3e50; }
-        
-        /* 결석(선택) 상태 */
+
         .seat.selected { background: #ffebee; border-color: var(--absent); }
         .seat.selected .seat-name { color: var(--absent); }
         .seat.selected::after { content: '결석'; position: absolute; top: -8px; right: -8px; background: var(--absent); color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
 
-        /* 해당 교시 불참(비활성화) 상태 */
         .seat.disabled { background: #ecf0f1; border-color: var(--dim); cursor: not-allowed; opacity: 0.6; }
         .seat.disabled .seat-name { color: #95a5a6; }
     </style>
@@ -93,20 +92,26 @@
             7: {x:510, y:110}, 8: {x:585, y:110}, 15: {x:510, y:175}, 16: {x:585, y:175}
         },
         "학습카페": {
-            // 💡 여기 30~33번 X좌표(가로 위치) 간격을 넓게 수정했습니다! (150, 250, 350, 450)
             30: {x:150, y:20, wide:true}, 31: {x:250, y:20, wide:true}, 32: {x:350, y:20, wide:true}, 33: {x:450, y:20, wide:true},
             34: {x:150, y:110}, 35: {x:225, y:110}, 
             36: {x:150, y:175}, 37: {x:225, y:175}, 
             38: {x:150, y:240}, 39: {x:225, y:240}, 
             40: {x:150, y:305}, 41: {x:225, y:305}, 
             42: {x:150, y:370}, 43: {x:225, y:370}, 
-            44: {x:150, y:435}, 45: {x:225, y:435},
-            46: {x:330, y:110}, 47: {x:405, y:110}, 
-            48: {x:330, y:175}, 49: {x:405, y:175}, 
-            50: {x:330, y:240}, 51: {x:405, y:240}, 
-            52: {x:330, y:305}, 53: {x:405, y:305}, 
-            54: {x:330, y:370}, 55: {x:405, y:370}, 
-            56: {x:330, y:435},
+            44: {x:150, y:435},
+            /* 💡 1번 요청: 좌석 배치 한 칸씩 이동 수정 */
+            45: {x:330, y:110}, // 46번 위치로
+            46: {x:405, y:110}, // 47번 위치로
+            47: {x:330, y:175}, // 48번 위치로
+            48: {x:405, y:175}, // 49번 위치로
+            49: {x:330, y:240}, // 50번 위치로
+            50: {x:405, y:240}, // 51번 위치로
+            51: {x:330, y:305}, // 52번 위치로
+            52: {x:405, y:305}, // 53번 위치로
+            53: {x:330, y:370}, // 54번 위치로
+            54: {x:405, y:370}, // 55번 위치로
+            55: {x:330, y:435}, // 54번(새위치) 아래로
+            56: {x:405, y:435}, // (나머지 패턴 유지를 위해 수정)
             25: {x:510, y:110}, 26: {x:510, y:175}, 27: {x:510, y:240}, 28: {x:510, y:305}, 29: {x:510, y:370}
         }
     };
@@ -124,14 +129,14 @@
         } catch(e) { document.getElementById('loading').innerText = "❌ 로딩 실패"; }
     }
 
-function render() {
+    function render() {
         const map = document.getElementById('map');
         map.innerHTML = '';
-        
+
         const dateVal = document.getElementById('datePicker').value;
         const dayName = ['일','월','화','수','목','금','토'][new Date(dateVal).getDay()];
         const sessionIdx = parseInt(document.getElementById('sessionPicker').value);
-        
+
         if (dayName === '수' || dayName === '일' || dayName === '토') {
             map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">해당 요일은 정규 야자가 없습니다.</div>`;
             return; 
@@ -143,26 +148,21 @@ function render() {
             const pos = coords[currentPlace][s.id];
             if(!pos) return; 
 
-            // 위 code.gs에서 만든 [8교시, 야자1, 야자2] 배열을 가져옴
             const daySch = s.sch[dayName] || [];
             const val = String(daySch[sessionIdx] || "").trim();
-            
-            // 💡 판별: 셀에 내용이 있으면(8교시, 야자 1 등) 활성화, 비어있으면 비활성화
             const isAttending = val !== "";
-            
+
             const card = document.createElement('div');
             card.className = `seat ${pos.wide ? 'wide' : ''} ${!isAttending ? 'disabled' : ''}`;
             card.style.left = pos.x + 'px';
             card.style.top = pos.y + 'px';
-            
+
             const storeKey = `${currentPlace}_${s.id}`;
             if(selectedStore[storeKey]) card.classList.add('selected');
 
-            // OUT 횟수가 1번 이상일 때만 빨간색 글씨로 횟수 생성 (0번이면 깔끔하게 안 보임)
-const outBadge = s.outCount > 0 ? `<span style="color:#e74c3c; font-weight:bold; font-size:8px; margin-left:4px;">(${s.outCount}회)</span>` : "";
+            const outBadge = s.outCount > 0 ? `<span style="color:#e74c3c; font-weight:bold; font-size:8px; margin-left:4px;">(${s.outCount}회)</span>` : "";
+            card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">${s.name}${outBadge}</div>`;
 
-card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">${s.name}${outBadge}</div>`;
-            
             if(isAttending) {
                 card.onclick = () => {
                     card.classList.toggle('selected');
@@ -173,6 +173,7 @@ card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">
             map.appendChild(card);
         });
     }
+
     function setPlace(p) {
         currentPlace = p;
         document.getElementById('tab-bitmuri').classList.toggle('active', p === '빛무리터');
@@ -186,17 +187,17 @@ card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">
         render();
     };
 
-async function sendData() {
+    async function sendData() {
         const teacher = document.getElementById('teacher').value;
         if(!teacher) return alert("선생님 성함을 선택하세요.");
-        
+
         const date = document.getElementById('datePicker').value;
         const sessionSelect = document.getElementById('sessionPicker');
         const sessionText = sessionSelect.options[sessionSelect.selectedIndex].text;
-        
+
         const sessionMap = { "0": "8", "1": "1", "2": "2" };
         const sessionVal = sessionMap[sessionSelect.value];
-        
+
         const absents = [];
         for (const key in selectedStore) {
             const [place, id] = key.split('_');
@@ -205,11 +206,9 @@ async function sendData() {
         }
 
         if(absents.length === 0) return alert("결석자를 선택하세요.");
-        
+
         if(confirm(`[${sessionText}] 총 ${absents.length}명의 결석을 저장할까요?\n(담당: ${teacher} 선생님)`)) {
             document.getElementById('loading').innerText = "📤 서버로 전송 중...";
-            
-            // 👉 여기서부터 수정되었습니다! 에러가 나면 화면에 띄워줍니다.
             try {
                 const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ date, teacher, absents }) });
                 const res = await response.json();
@@ -223,7 +222,7 @@ async function sendData() {
                     document.getElementById('loading').innerText = "❌ 서버 에러";
                 }
             } catch(error) {
-                alert("통신 에러가 발생했습니다. 구글 앱스 스크립트 주소나 배포 설정을 확인해주세요.\n상세: " + error);
+                alert("통신 에러가 발생했습니다. 상세: " + error);
                 document.getElementById('loading').innerText = "❌ 통신 에러";
             }
         }
