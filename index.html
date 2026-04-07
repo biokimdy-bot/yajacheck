@@ -8,7 +8,6 @@
         :root { --main: #2c3e50; --absent: #e74c3c; --dim: #ecf0f1; --border: #bdc3c7; }
         body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; background: #f1f2f6; overflow: hidden; }
         
-        /* 상단 컨트롤 바 */
         .controls { background: var(--main); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 15px; font-size: 13px; z-index: 10; }
         .controls h3 { margin: 0; font-size: 16px; margin-right: 10px; }
         .controls .input-group { display: flex; align-items: center; gap: 5px; }
@@ -18,13 +17,11 @@
         .status-msg { font-size: 12px; color: #f1c40f; font-weight: bold; margin-left: auto; }
         .save-btn { background: #27ae60; color: white; padding: 8px 18px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        /* 메인 영역 */
         .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; }
         .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
         .tab { padding: 8px 20px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: #3498db; color: white; }
 
-        /* 캔버스 */
         .map-canvas { position: relative; width: 1000px; height: 600px; background: white; border: 2px solid #b2bec3; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
         .seat { position: absolute; width: 72px; height: 62px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-around; padding: 2px; box-sizing: border-box; }
@@ -57,7 +54,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzASrlrWLGfExtAuPLNbW0cRQgjkq3rksJ6mKOjstBFWZ5LP8dI5jXZzPz4pWZSyaE/exec"; // 선생님의 주소를 넣어주세요
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzASrlrWLGfExtAuPLNbW0cRQgjkq3rksJ6mKOjstBFWZ5LP8dI5jXZzPz4pWZSyaE/exec"; 
     let fullData = {}; 
     let currentPlace = '빛무리터';
     
@@ -66,27 +63,27 @@
             21: {x:30, y:20, wide:true}, 22: {x:135, y:20, wide:true}, 23: {x:240, y:20, wide:true}, 24: {x:345, y:20, wide:true},
             1: {x:30, y:110}, 2: {x:105, y:110}, 3: {x:180, y:110}, 4: {x:255, y:110}, 5: {x:330, y:110}, 6: {x:405, y:110},
             9: {x:30, y:175}, 10: {x:105, y:175}, 11: {x:180, y:175}, 12: {x:255, y:175}, 13: {x:330, y:175}, 14: {x:405, y:175},
-            // 17~20번: 11~14번 바로 아래에 짝을 맞춰 배치
             17: {x:180, y:260}, 18: {x:255, y:260}, 19: {x:330, y:260}, 20: {x:405, y:260},
             7: {x:510, y:110}, 8: {x:585, y:110}, 15: {x:510, y:175}, 16: {x:585, y:175}
         },
         "학습카페": {
-            30: {x:350, y:20, wide:true}, 31: {x:455, y:20, wide:true}, 32: {x:560, y:20, wide:true}, 33: {x:665, y:20, wide:true},
-            25: {x:800, y:110}, 26: {x:800, y:175}, 27: {x:800, y:240}, 28: {x:800, y:305}, 29: {x:800, y:370},
-            // 중앙 1구역 (34-45): 44번 포함, 좌우 짝 맞춤
-            34: {x:120, y:110}, 35: {x:195, y:110}, 
-            36: {x:120, y:175}, 38: {x:195, y:175}, 
-            37: {x:120, y:240}, 40: {x:195, y:240}, 
-            39: {x:120, y:305}, 42: {x:195, y:305}, 
-            41: {x:120, y:370}, 44: {x:195, y:370}, // 44번 여기에 짝 맞춰 넣음
-            43: {x:120, y:435}, 45: {x:120, y:500},
-            // 중앙 2구역 (46-56): 좌우 짝 맞춤
-            46: {x:400, y:110}, 47: {x:475, y:110}, 
-            48: {x:400, y:175}, 49: {x:475, y:175}, 
-            50: {x:400, y:240}, 51: {x:475, y:240}, 
-            52: {x:400, y:305}, 53: {x:475, y:305}, 
-            54: {x:400, y:370}, 55: {x:475, y:370}, 
-            56: {x:400, y:435}
+            30: {x:300, y:20, wide:true}, 31: {x:405, y:20, wide:true}, 32: {x:510, y:20, wide:true}, 33: {x:615, y:20, wide:true},
+            // 덩어리 1 (34~45): 사진 기반 지그재그 배치
+            34: {x:150, y:110}, 35: {x:225, y:110}, 
+            36: {x:150, y:175}, 38: {x:225, y:175}, 
+            37: {x:150, y:240}, 40: {x:225, y:240}, 
+            39: {x:150, y:305}, 42: {x:225, y:305}, 
+            41: {x:150, y:370}, 44: {x:225, y:370}, 
+            43: {x:150, y:435}, 45: {x:150, y:500}, // 43, 45번은 사진처럼 왼쪽 아래로
+            // 덩어리 2 (46~56): 번호 교차 지그재그 (간격 105px 적용)
+            46: {x:330, y:110}, 47: {x:405, y:110}, 
+            48: {x:330, y:175}, 49: {x:405, y:175}, 
+            50: {x:330, y:240}, 51: {x:405, y:240}, 
+            52: {x:330, y:305}, 53: {x:405, y:305}, 
+            54: {x:330, y:370}, 55: {x:405, y:370}, 
+            56: {x:330, y:435},
+            // 덩어리 3 (25~29): 벽면 (간격 105px 적용)
+            25: {x:510, y:110}, 26: {x:510, y:175}, 27: {x:510, y:240}, 28: {x:510, y:305}, 29: {x:510, y:370}
         }
     };
 
@@ -108,7 +105,7 @@
         const dayName = ['일','월','화','수','목','금','토'][new Date(document.getElementById('datePicker').value).getDay()];
         
         if (dayName === '수') {
-            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;">오늘은 수요일이라 야자 배치가 없습니다.</div>`;
+            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;">오늘은 수요일이라 정규 야자가 없습니다. 😊</div>`;
             return; 
         }
 
