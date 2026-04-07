@@ -7,45 +7,32 @@
     <style>
         :root { --main: #2c3e50; --absent: #e74c3c; --dim: #ecf0f1; --border: #bdc3c7; }
         body { font-family: 'Pretendard', sans-serif; margin: 0; display: flex; height: 100vh; background: #f1f2f6; overflow: hidden; }
-        
-        /* 좌측 사이드바 */
         .sidebar { width: 180px; background: var(--main); color: white; padding: 15px; display: flex; flex-direction: column; gap: 10px; font-size: 13px; z-index: 10; }
         .sidebar input { padding: 10px; border-radius: 4px; border: none; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .save-btn { background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: auto; font-size: 14px; }
-        
-        /* 우측 메인 도면 영역 */
-        .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; position: relative; }
+        .content { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: auto; }
         .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
-        .tab { padding: 10px 25px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; font-size: 14px; }
+        .tab { padding: 10px 25px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: #3498db; color: white; }
-
-        /* 캔버스 (배치도) */
-        .map-canvas { position: relative; width: 1000px; height: 650px; background: white; border: 2px solid #b2bec3; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
-        /* 좌석 개별 카드 */
-        .seat { position: absolute; width: 75px; height: 65px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-around; padding: 3px; box-sizing: border-box; box-shadow: 1px 1px 3px rgba(0,0,0,0.05); }
-        .seat-header { display: flex; justify-content: space-between; font-size: 10px; color: #7f8c8d; }
-        .seat-name { font-weight: bold; font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; }
-        
-        /* 결석 체크 버튼 */
+        .map-canvas { position: relative; width: 1000px; height: 650px; background: white; border: 2px solid #b2bec3; border-radius: 8px; }
+        .seat { position: absolute; width: 75px; height: 65px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-around; padding: 3px; box-sizing: border-box; }
+        .seat-name { font-weight: bold; font-size: 12px; text-align: center; }
         .btns { display: flex; justify-content: center; gap: 2px; }
         .b { width: 22px; height: 22px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 9px; font-weight: bold; }
         .b.selected { background: var(--absent); color: white; border-color: var(--absent); }
         .b:disabled { background: var(--dim); color: #ccc; border: none; cursor: not-allowed; }
-
-        /* 수요일 안내 메시지 */
-        .wed-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #7f8c8d; font-size: 20px; font-weight: bold; background: #f8f9fa; border-radius: 8px; }
+        .wed-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #7f8c8d; font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h3 style="margin:0 0 5px 0">야자 출석 체크</h3>
+    <h3 style="margin:0">야자 출석체크</h3>
     <label>날짜 선택</label>
     <input type="date" id="datePicker">
     <label>선생님 성함</label>
     <input type="text" id="teacher" placeholder="기록자 입력">
-    <div id="loading" style="font-size:12px; color:#f1c40f; font-weight:bold;">데이터 불러오는 중...</div>
+    <div id="loading" style="font-size:12px; color:#f1c40f;">데이터 로딩 중...</div>
     <button class="save-btn" onclick="sendData()">결석 저장하기</button>
 </div>
 
@@ -58,13 +45,12 @@
 </div>
 
 <script>
-    // ⚠️ 중요: 아래 따옴표 안에 선생님의 구글 앱스 스크립트 '배포 URL'을 꼭 넣으세요!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdrENMAo7Y0uG7Klap4deD8cxk4T6BBAlb1MY--cVgGAomwhg_r-W7EUwBCmsyvsQ/exec"; 
+    // ⚠️ 여기에 선생님의 구글 앱스 스크립트 배포 URL을 넣으세요!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI2SeqnTD4GbzKCCf2Q_UNDPh9TXzNZYZzysZ1mTvAFzigWc551iPDeNEQhKKPc6A/exec"; 
 
     let fullData = {}; 
     let currentPlace = '빛무리터';
     
-    // 도면 좌표 설정 (x, y)
     const coords = {
         "빛무리터": {
             21: {x:50, y:30}, 22: {x:135, y:30}, 23: {x:220, y:30}, 24: {x:305, y:30},
@@ -85,41 +71,36 @@
 
     document.getElementById('datePicker').valueAsDate = new Date();
 
-    // 구글 시트에서 데이터 불러오기
+    // 데이터를 시트에서 불러오는 핵심 함수
     async function loadSheetData() {
+        document.getElementById('loading').innerText = "🔄 시트 동기화 중...";
         try {
             const res = await fetch(SCRIPT_URL);
             fullData = await res.json();
-            document.getElementById('loading').innerText = "✅ 데이터 동기화 완료";
-            document.getElementById('loading').style.color = "#2ecc71";
+            document.getElementById('loading').innerText = "✅ 동기화 완료";
             render();
         } catch(e) {
-            document.getElementById('loading').innerText = "❌ 데이터 로딩 실패";
-            document.getElementById('loading').style.color = "#e74c3c";
+            document.getElementById('loading').innerText = "❌ 로딩 실패";
         }
     }
 
-    // 화면 그리기 함수
     function render() {
         const map = document.getElementById('map');
-        map.innerHTML = ''; 
-        
+        map.innerHTML = '';
         const selectedDate = new Date(document.getElementById('datePicker').value);
         const days = ['일','월','화','수','목','금','토'];
         const dayName = days[selectedDate.getDay()];
         
-        // 1. 수요일 차단 처리
         if (dayName === '수') {
-            map.innerHTML = `<div class="wed-msg">오늘은 수요일이라 정규 야간자율학습이 없습니다. 😊</div>`;
+            map.innerHTML = `<div class="wed-msg">오늘은 수요일이라 야자 배치가 없습니다. 😊</div>`;
             return; 
         }
 
         if(!fullData[currentPlace]) return;
 
-        // 2. 좌석 렌더링
         fullData[currentPlace].forEach(s => {
-            const pos = coords[currentPlace][s.id] || {x: -1000, y: -1000}; // 도면에 없는 번호는 화면 밖으로
-            const sch = s.sch[dayName] || [0, 0, 0]; // 해당 요일의 시간표 배열 [8교시, 야자1, 야자2]
+            const pos = coords[currentPlace][s.id] || {x: -1000, y: -1000};
+            const sch = s.sch[dayName] || [0, 0, 0];
 
             const card = document.createElement('div');
             card.className = 'seat';
@@ -129,18 +110,23 @@
                 <div class="seat-header">#${s.id}</div>
                 <div class="seat-name">${s.name}</div>
                 <div class="btns">
-                    <button class="b" ${sch[0] ? '' : 'disabled'} onclick="this.classList.toggle('selected')">8</button>
-                    <button class="b" ${sch[1] ? '' : 'disabled'} onclick="this.classList.toggle('selected')">1</button>
-                    <button class="b" ${sch[2] ? '' : 'disabled'} onclick="this.classList.toggle('selected')">2</button>
+                    <button class="b" ${sch[0] ? '' : 'disabled'}>8</button>
+                    <button class="b" ${sch[1] ? '' : 'disabled'}>1</button>
+                    <button class="b" ${sch[2] ? '' : 'disabled'}>2</button>
                 </div>
             `;
+            // 클릭 시 색상 변경 이벤트 추가
+            card.querySelectorAll('.b').forEach(btn => {
+                if(!btn.disabled) {
+                    btn.onclick = () => btn.classList.toggle('selected');
+                }
+            });
             card.dataset.id = s.id;
             card.dataset.name = s.name;
             map.appendChild(card);
         });
     }
 
-    // 장소 탭 변경
     function setPlace(p) {
         currentPlace = p;
         document.getElementById('tab-bitmuri').classList.toggle('active', p === '빛무리터');
@@ -148,58 +134,29 @@
         render();
     }
 
-    // 구글 시트로 데이터 전송 (저장)
+    // 날짜가 바뀔 때마다 데이터를 새로 불러옵니다 (가장 중요한 부분!)
+    document.getElementById('datePicker').onchange = loadSheetData;
+
     async function sendData() {
         const teacher = document.getElementById('teacher').value;
-        if(!teacher) return alert("선생님 성함을 먼저 입력해 주세요.");
-        
+        if(!teacher) return alert("성함을 입력하세요.");
         const date = document.getElementById('datePicker').value;
         const absents = [];
-
         document.querySelectorAll('.seat').forEach(seat => {
             seat.querySelectorAll('.b.selected').forEach(btn => {
-                absents.push({
-                    place: currentPlace,
-                    id: seat.dataset.id,
-                    name: seat.dataset.name,
-                    session: btn.innerText
-                });
+                absents.push({ place: currentPlace, id: seat.dataset.id, name: seat.dataset.name, session: btn.innerText });
             });
         });
-
-        if(absents.length === 0) return alert("체크된 결석자가 없습니다.");
-
-        if(confirm(`총 ${absents.length}건의 결석 데이터를 저장하시겠습니까?`)) {
-            document.getElementById('loading').innerText = "전송 중...";
-            document.getElementById('loading').style.color = "#f39c12";
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ date, teacher, absents })
-                });
-                const res = await response.json();
-                if(res.result === 'success') {
-                    alert("성공적으로 저장되었습니다.");
-                    location.reload(); // 저장 후 화면 새로고침
-                }
-            } catch(e) {
-                alert("저장 중 오류가 발생했습니다. 네트워크나 URL을 확인해주세요.");
-                document.getElementById('loading').innerText = "✅ 데이터 동기화 완료";
-                document.getElementById('loading').style.color = "#2ecc71";
-            }
+        if(absents.length === 0) return alert("결석자를 선택하세요.");
+        if(confirm(`${absents.length}건을 저장할까요?`)) {
+            const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ date, teacher, absents }) });
+            const res = await response.json();
+            if(res.result === 'success') { alert("저장 완료!"); location.reload(); }
         }
     }
 
-    // 날짜 변경 시 즉시 렌더링
-    document.getElementById('datePicker').onchange = render;
-    
-    // 초기 실행
-    if(SCRIPT_URL.includes("여기에_선생님의")) {
-        alert("코드 내의 SCRIPT_URL을 선생님의 구글 앱스 스크립트 주소로 변경해주세요!");
-    } else {
-        loadSheetData();
-    }
+    // 처음 켰을 때 한 번 실행
+    loadSheetData();
 </script>
 </body>
 </html>
