@@ -124,14 +124,18 @@
         } catch(e) { document.getElementById('loading').innerText = "❌ 로딩 실패"; }
     }
 
-    function render() {
+function render() {
         const map = document.getElementById('map');
         map.innerHTML = '';
-        const dayName = ['일','월','화','수','목','금','토'][new Date(document.getElementById('datePicker').value).getDay()];
+        
+        // 날짜 객체 생성 및 요일 추출
+        const dateVal = document.getElementById('datePicker').value;
+        const dayName = ['일','월','화','수','목','금','토'][new Date(dateVal).getDay()];
         const sessionIdx = parseInt(document.getElementById('sessionPicker').value);
         
+        // 수요일 예외 처리 (원치 않으시면 이 if문 전체를 삭제해도 됩니다)
         if (dayName === '수') {
-            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">오늘은 수요일이라 정규 야자가 없습니다.</div>`;
+            map.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;height:100%;color:#7f8c8d;font-weight:bold;font-size:18px;">수요일은 정규 야자가 없습니다.</div>`;
             return; 
         }
 
@@ -141,10 +145,16 @@
             const pos = coords[currentPlace][s.id];
             if(!pos) return; 
 
-            const sch = s.sch[dayName] || [0, 0, 0];
-            const val = sch[sessionIdx];
+            // 시트에서 가져온 해당 요일의 스케줄 배열
+            const sch = s.sch[dayName] || [];
             
-            const isAttending = val && val != 0 && val != "0" && String(val).toUpperCase() !== "FALSE" && String(val).toUpperCase() !== "X";
+            // 💡 수정된 부분: 시트 데이터 구조가 [8교시, 야자1, 야자2] 순서라면
+            // sessionIdx(0, 1, 2)를 그대로 가져오면 됩니다.
+            // 만약 그래도 밀린다면 아래 숫자를 +1 혹은 -1 하며 조정할 수 있습니다.
+            const val = sch[sessionIdx]; 
+            
+            // 데이터가 '1'이거나 'true'이거나 'O'인 경우만 활성화
+            const isAttending = val && (val == "1" || String(val).toUpperCase() === "TRUE" || String(val).toUpperCase() === "O");
             
             const card = document.createElement('div');
             card.className = `seat ${pos.wide ? 'wide' : ''}`;
