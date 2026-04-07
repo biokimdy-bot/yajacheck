@@ -14,11 +14,17 @@
         .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
         .tab { padding: 10px 25px; background: #ccc; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
         .tab.active { background: #3498db; color: white; }
-        .map-canvas { position: relative; width: 1000px; height: 650px; background: white; border: 2px solid #b2bec3; border-radius: 8px; }
+        .map-canvas { position: relative; width: 1050px; height: 650px; background: white; border: 2px solid #b2bec3; border-radius: 8px; }
+        
+        /* 일반 좌석 */
         .seat { position: absolute; width: 75px; height: 65px; background: #fff; border: 1px solid var(--border); border-radius: 4px; display: flex; flex-direction: column; justify-content: space-around; padding: 3px; box-sizing: border-box; }
+        /* 넓은 좌석 (상단용) */
+        .seat.wide { width: 110px; height: 70px; background: #f8f9fa; border: 2px solid #34495e; }
+        
+        .seat-header { display: flex; justify-content: space-between; font-size: 10px; color: #7f8c8d; }
         .seat-name { font-weight: bold; font-size: 12px; text-align: center; }
         .btns { display: flex; justify-content: center; gap: 2px; }
-        .b { width: 22px; height: 22px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 9px; font-weight: bold; }
+        .b { width: 24px; height: 24px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 3px; font-size: 10px; font-weight: bold; }
         .b.selected { background: var(--absent); color: white; border-color: var(--absent); }
         .b:disabled { background: var(--dim); color: #ccc; border: none; cursor: not-allowed; }
         .wed-msg { display: flex; justify-content: center; align-items: center; height: 100%; color: #7f8c8d; font-size: 18px; font-weight: bold; }
@@ -45,7 +51,7 @@
 </div>
 
 <script>
-    // ⚠️ 여기에 선생님의 구글 앱스 스크립트 배포 URL을 넣으세요!
+    // ⚠️ 여기에 선생님의 구글 앱스 스크립트 배포 URL을 꼭 넣으세요!
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzASrlrWLGfExtAuPLNbW0cRQgjkq3rksJ6mKOjstBFWZ5LP8dI5jXZzPz4pWZSyaE/exec"; 
 
     let fullData = {}; 
@@ -53,25 +59,34 @@
     
     const coords = {
         "빛무리터": {
-            21: {x:50, y:30}, 22: {x:135, y:30}, 23: {x:220, y:30}, 24: {x:305, y:30},
+            // 상단 넓은 좌석 (21-24)
+            21: {x:50, y:20, wide:true}, 22: {x:180, y:20, wide:true}, 23: {x:310, y:20, wide:true}, 24: {x:440, y:20, wide:true},
+            // 중앙 좌석
             1: {x:50, y:150}, 2: {x:135, y:150}, 3: {x:220, y:150}, 4: {x:305, y:150}, 5: {x:390, y:150}, 6: {x:475, y:150},
             9: {x:50, y:225}, 10: {x:135, y:225}, 11: {x:220, y:225}, 12: {x:305, y:225}, 13: {x:390, y:225}, 14: {x:475, y:225},
+            // 사이드
             7: {x:600, y:150}, 8: {x:685, y:150}, 15: {x:600, y:225}, 16: {x:685, y:225},
+            // 하단
             17: {x:400, y:450}, 18: {x:485, y:450}, 19: {x:570, y:450}, 20: {x:655, y:450}
         },
         "학습카페": {
-            30: {x:400, y:30}, 31: {x:485, y:30}, 32: {x:570, y:30}, 33: {x:655, y:30},
-            25: {x:30, y:150}, 26: {x:30, y:230}, 27: {x:30, y:310}, 28: {x:30, y:390}, 29: {x:30, y:470},
-            34: {x:200, y:150}, 36: {x:200, y:220}, 37: {x:200, y:290}, 39: {x:200, y:360}, 41: {x:200, y:430}, 43: {x:200, y:500},
+            // 창가 넓은 좌석 (30-33)
+            30: {x:400, y:20, wide:true}, 31: {x:530, y:20, wide:true}, 32: {x:660, y:20, wide:true}, 33: {x:790, y:20, wide:true},
+            // 오른쪽 벽면 (25-29) - 위치 수정됨
+            25: {x:930, y:150}, 26: {x:930, y:230}, 27: {x:930, y:310}, 28: {x:930, y:390}, 29: {x:930, y:470},
+            // 중앙1열
+            34: {x:200, y:150}, 36: {x:200, y:220}, 37: {x:200, y:290}, 39: {x:200, y:360}, 41: {x:200, y:430}, 43: {x:200, y:500}, 45: {x:200, y:570},
+            // 중앙2열
             35: {x:280, y:150}, 38: {x:280, y:220}, 40: {x:280, y:290}, 42: {x:280, y:360}, 44: {x:280, y:430},
-            45: {x:450, y:150}, 47: {x:450, y:220}, 49: {x:450, y:290}, 51: {x:450, y:360}, 53: {x:450, y:430}, 55: {x:450, y:500},
-            46: {x:530, y:150}, 48: {x:530, y:220}, 50: {x:530, y:290}, 52: {x:530, y:360}, 54: {x:530, y:430}, 56: {x:530, y:500}
+            // 중앙3열
+            46: {x:450, y:150}, 48: {x:450, y:220}, 50: {x:450, y:290}, 52: {x:450, y:360}, 54: {x:450, y:430}, 56: {x:450, y:500},
+            // 중앙4열
+            47: {x:530, y:150}, 49: {x:530, y:220}, 51: {x:530, y:290}, 53: {x:530, y:360}, 55: {x:530, y:430}
         }
     };
 
     document.getElementById('datePicker').valueAsDate = new Date();
 
-    // 데이터를 시트에서 불러오는 핵심 함수
     async function loadSheetData() {
         document.getElementById('loading').innerText = "🔄 시트 동기화 중...";
         try {
@@ -103,7 +118,7 @@
             const sch = s.sch[dayName] || [0, 0, 0];
 
             const card = document.createElement('div');
-            card.className = 'seat';
+            card.className = `seat ${pos.wide ? 'wide' : ''}`; // 넓은 좌석 클래스 적용
             card.style.left = pos.x + 'px';
             card.style.top = pos.y + 'px';
             card.innerHTML = `
@@ -115,7 +130,6 @@
                     <button class="b" ${sch[2] ? '' : 'disabled'}>2</button>
                 </div>
             `;
-            // 클릭 시 색상 변경 이벤트 추가
             card.querySelectorAll('.b').forEach(btn => {
                 if(!btn.disabled) {
                     btn.onclick = () => btn.classList.toggle('selected');
@@ -134,7 +148,6 @@
         render();
     }
 
-    // 날짜가 바뀔 때마다 데이터를 새로 불러옵니다 (가장 중요한 부분!)
     document.getElementById('datePicker').onchange = loadSheetData;
 
     async function sendData() {
@@ -155,7 +168,6 @@
         }
     }
 
-    // 처음 켰을 때 한 번 실행
     loadSheetData();
 </script>
 </body>
