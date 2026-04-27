@@ -165,7 +165,7 @@
             const isAttending = val !== "";
 
             const card = document.createElement('div');
-            card.className = `seat ${pos.wide ? 'wide' : ''} ${!isAttending ? 'disabled' : ''}`;
+            card.className = `seat ${pos.wide ? 'wide' : ''} ${pos.extraWide ? 'extra-wide' : ''} ${!isAttending ? 'disabled' : ''}`;
             card.style.left = pos.x + 'px';
             card.style.top = pos.y + 'px';
 
