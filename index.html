@@ -38,7 +38,15 @@
         .seat.extra-wide { width: 150px; height: 62px; }
 
         .seat-header { font-size: 10px; color: #7f8c8d; margin-bottom: 2px; }
-        .seat-name { font-weight: bold; font-size: 14px; color: #2c3e50; }
+        .seat-name {
+            font-weight: bold; 
+            font-size: 14px; 
+            color: #2c3e50; 
+            white-space: nowrap; /* 💡 글자가 길어도 아래로 안 떨어지게 함 */
+            width: 90%;          /* 💡 좌석 너비 안에서 움직이게 제한 */
+            text-align: center;
+            display: inline-block;
+        }
 
         .seat.selected { background: #ffebee; border-color: var(--absent); }
         .seat.selected .seat-name { color: var(--absent); }
@@ -175,6 +183,11 @@
             const outBadge = s.outCount > 0 ? `<span style="color:#e74c3c; font-weight:bold; font-size:8px; margin-left:4px;">(${s.outCount}회)</span>` : "";
             card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">${s.name}${outBadge}</div>`;
 
+        // 이름이 길면 자동으로 줄여주는 코드 추가
+        const nameElement = card.querySelector('.seat-name');
+        setTimeout(() => adjustFontSize(nameElement), 0); 
+        /* --- 여기까지 붙여넣기 --- */
+
             if(isAttending) {
                 card.onclick = () => {
                     card.classList.toggle('selected');
@@ -240,6 +253,19 @@
         }
     }
     loadSheetData();
+    // 글자 길이에 따라 폰트 크기를 자동으로 줄여주는 함수
+    function adjustFontSize(element) {
+        const parentWidth = element.parentElement.offsetWidth;
+        let fontSize = 14; // 기본 폰트 크기
+
+        element.style.fontSize = fontSize + "px";
+
+        // 글자가 부모 박스(좌석)보다 크면 1px씩 줄임 (최소 9px까지)
+        while (element.scrollWidth > parentWidth * 0.9 && fontSize > 9) {
+            fontSize--;
+            element.style.fontSize = fontSize + "px";
+        }
+    }
 </script>
 </body>
 </html>
