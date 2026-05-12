@@ -74,6 +74,14 @@
             border-radius: 10px; 
             font-weight: bold; 
         }
+        /* 결석 횟수 배지 스타일 (이름 아래 줄용) */
+        .out-badge {
+            font-size: 10px;
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 2px; /* 이름과의 간격 */
+            display: block;  /* 무조건 다음 줄로 배치 */
+        }
     </style>
 </head>
 <body>
@@ -207,8 +215,15 @@ function render() {
             const storeKey = `${currentPlace}_${s.id}`;
             if(selectedStore[storeKey]) card.classList.add('selected');
 
-            const outBadge = s.outCount > 0 ? `<span style="color:#e74c3c; font-weight:bold; font-size:8px; margin-left:4px;">(${s.outCount}회)</span>` : "";
-            card.innerHTML = `<div class="seat-header">#${s.id}</div><div class="seat-name">${s.name}${outBadge}</div>`;
+            // 1. 결석 횟수를 이름 아래 줄에 넣기 위해 구조를 변경합니다.
+            const outBadge = s.outCount > 0 ? `<div class="out-badge">(${s.outCount}회)</div>` : "";
+            
+            // 2. HTML 구조: 이름 뒤가 아니라 이름 요소 '밖' 아래에 배치합니다.
+            card.innerHTML = `
+                <div class="seat-header">#${s.id}</div>
+                <div class="seat-name">${s.name}</div>
+                ${outBadge}
+            `;
 
             // 이름 길이에 따른 폰트 조절
             const nameElement = card.querySelector('.seat-name');
